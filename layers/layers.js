@@ -38,12 +38,56 @@ var lyr_AP2025Aree_Permeabili_Comune_di_Napoli_1 = new ol.layer.Vector({
     <img src="styles/legend/AP2025Aree_Permeabili_Comune_di_Napoli_1_9.png" /> verde stradale<br />\
     <img src="styles/legend/AP2025Aree_Permeabili_Comune_di_Napoli_1_10.png" /> <br />'
         });
+var group_GRANDIPARCHI = new ol.layer.Group({
+                                layers: [],
+                                fold: "open",
+                                title: "GRANDI PARCHI"});
+var group_PARCHIMUNICIPALI = new ol.layer.Group({
+                                layers: [],
+                                fold: "open",
+                                title: "PARCHI MUNICIPALI"});
+var group_VERDEMUNICIPALEnonparchi = new ol.layer.Group({
+                                layers: [],
+                                fold: "open",
+                                title: "VERDE MUNICIPALE (non parchi)"});
+var group_SCUOLE = new ol.layer.Group({
+                                layers: [],
+                                fold: "open",
+                                title: "SCUOLE"});
+var group_CIMITERI = new ol.layer.Group({
+                                layers: [],
+                                fold: "open",
+                                title: "CIMITERI"});
+var group_IMPIANTISPORTIVI = new ol.layer.Group({
+                                layers: [],
+                                fold: "open",
+                                title: "IMPIANTI SPORTIVI"});
+var group_ALTROVERDEPUBBLICONocomunedinapoli = new ol.layer.Group({
+                                layers: [],
+                                fold: "open",
+                                title: "ALTRO VERDE PUBBLICO No comune di napoli"});
+var group_VERDEMUNICIPALEPERMUNICIPALITA = new ol.layer.Group({
+                                layers: [],
+                                fold: "open",
+                                title: "VERDE MUNICIPALE - PER MUNICIPALITA'"});
+var group_CONFINIMUNICIPALITA = new ol.layer.Group({
+                                layers: [],
+                                fold: "open",
+                                title: "CONFINI MUNICIPALITA'"});
+var group_GEOJSON = new ol.layer.Group({
+                                layers: [],
+                                fold: "open",
+                                title: "GEOJSON"});
+var group_AeroFotogrammetrico2022 = new ol.layer.Group({
+                                layers: [],
+                                fold: "open",
+                                title: "AeroFotogrammetrico 2022"});
 
 lyr_GoogleSatellite_0.setVisible(true);lyr_AP2025Aree_Permeabili_Comune_di_Napoli_1.setVisible(true);
 var layersList = [lyr_GoogleSatellite_0,lyr_AP2025Aree_Permeabili_Comune_di_Napoli_1];
-lyr_AP2025Aree_Permeabili_Comune_di_Napoli_1.set('fieldAliases', {'id': 'id', 'NAME': 'NAME', 'DESCRIPTIO': 'DESCRIPTIO', 'MUN': 'MUN', 'name group': 'name group', 'definizion': 'definizion', 'piu\' info': 'piu\' info', 'superficie mq:': 'superficie mq:', });
-lyr_AP2025Aree_Permeabili_Comune_di_Napoli_1.set('fieldImages', {'id': 'TextEdit', 'NAME': 'TextEdit', 'DESCRIPTIO': 'ValueMap', 'MUN': 'ValueMap', 'name group': 'TextEdit', 'definizion': 'TextEdit', 'piu\' info': 'TextEdit', 'superficie mq:': 'TextEdit', });
-lyr_AP2025Aree_Permeabili_Comune_di_Napoli_1.set('fieldLabels', {'id': 'header label - always visible', 'NAME': 'header label - always visible', 'DESCRIPTIO': 'inline label - visible with data', 'MUN': 'inline label - visible with data', 'name group': 'hidden field', 'definizion': 'hidden field', 'piu\' info': 'hidden field', 'superficie mq:': 'inline label - visible with data', });
+lyr_AP2025Aree_Permeabili_Comune_di_Napoli_1.set('fieldAliases', {'id': 'id', 'NAME': 'NAME', 'DESCRIPTIO': 'DESCRIPTIO', 'MUN': 'MUN', 'name group': 'name group', 'definizion': 'definizion', 'piu\' info': 'piu\' info', ' sup mq': ' sup mq', });
+lyr_AP2025Aree_Permeabili_Comune_di_Napoli_1.set('fieldImages', {'id': 'TextEdit', 'NAME': 'TextEdit', 'DESCRIPTIO': 'ValueMap', 'MUN': 'ValueMap', 'name group': 'TextEdit', 'definizion': 'TextEdit', 'piu\' info': 'TextEdit', ' sup mq': 'TextEdit', });
+lyr_AP2025Aree_Permeabili_Comune_di_Napoli_1.set('fieldLabels', {'id': 'inline label - visible with data', 'NAME': 'inline label - visible with data', 'DESCRIPTIO': 'inline label - visible with data', 'MUN': 'inline label - visible with data', 'name group': 'inline label - visible with data', 'definizion': 'inline label - visible with data', 'piu\' info': 'inline label - visible with data', ' sup mq': 'inline label - visible with data', });
 lyr_AP2025Aree_Permeabili_Comune_di_Napoli_1.on('precompose', function(evt) {
     evt.context.globalCompositeOperation = 'normal';
 });
