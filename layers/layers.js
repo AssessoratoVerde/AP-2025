@@ -87,7 +87,7 @@ lyr_GoogleSatellite_0.setVisible(true);lyr_AP2025Aree_Permeabili_Comune_di_Napol
 var layersList = [lyr_GoogleSatellite_0,lyr_AP2025Aree_Permeabili_Comune_di_Napoli_1];
 lyr_AP2025Aree_Permeabili_Comune_di_Napoli_1.set('fieldAliases', {'id': 'id', 'NAME': 'NAME', 'DESCRIPTIO': 'DESCRIPTIO', 'MUN': 'MUN', 'name group': 'name group', 'definizion': 'definizion', 'piu\' info': 'piu\' info', ' sup mq': ' sup mq', });
 lyr_AP2025Aree_Permeabili_Comune_di_Napoli_1.set('fieldImages', {'id': 'TextEdit', 'NAME': 'TextEdit', 'DESCRIPTIO': 'ValueMap', 'MUN': 'ValueMap', 'name group': 'TextEdit', 'definizion': 'TextEdit', 'piu\' info': 'TextEdit', ' sup mq': 'TextEdit', });
-lyr_AP2025Aree_Permeabili_Comune_di_Napoli_1.set('fieldLabels', {'id': 'inline label - visible with data', 'NAME': 'inline label - visible with data', 'DESCRIPTIO': 'inline label - visible with data', 'MUN': 'inline label - visible with data', 'name group': 'inline label - visible with data', 'definizion': 'inline label - visible with data', 'piu\' info': 'inline label - visible with data', ' sup mq': 'inline label - visible with data', });
+lyr_AP2025Aree_Permeabili_Comune_di_Napoli_1.set('fieldLabels', {'id': 'inline label - visible with data', 'NAME': 'inline label - visible with data', 'DESCRIPTIO': 'inline label - visible with data', 'MUN': 'inline label - visible with data', 'name group': 'inline label - visible with data', 'definizion': 'no label', 'piu\' info': 'inline label - visible with data', ' sup mq': 'inline label - always visible', });
 lyr_AP2025Aree_Permeabili_Comune_di_Napoli_1.on('precompose', function(evt) {
     evt.context.globalCompositeOperation = 'normal';
 });
