@@ -38,6 +38,10 @@ var lyr_AP2025Aree_Permeabili_Comune_di_Napoli_1 = new ol.layer.Vector({
     <img src="styles/legend/AP2025Aree_Permeabili_Comune_di_Napoli_1_9.png" /> altro<br />\
     <img src="styles/legend/AP2025Aree_Permeabili_Comune_di_Napoli_1_10.png" /> parchi pubblici non comunali<br />\
     <img src="styles/legend/AP2025Aree_Permeabili_Comune_di_Napoli_1_11.png" /> <br />' });
+var group_PARCHIMUNICIPALI = new ol.layer.Group({
+                                layers: [],
+                                fold: "open",
+                                title: 'PARCHI MUNICIPALI'});
 
 lyr_GoogleSatellite_0.setVisible(true);lyr_AP2025Aree_Permeabili_Comune_di_Napoli_1.setVisible(true);
 var layersList = [lyr_GoogleSatellite_0,lyr_AP2025Aree_Permeabili_Comune_di_Napoli_1];

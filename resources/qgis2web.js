@@ -9,7 +9,7 @@ var map = new ol.Map({
 });
 
 //initial view - epsg:3857 coordinates if not "Match project CRS"
-map.getView().fit([1584404.056648, 4997144.496419, 1586034.954567, 4998212.925113], map.getSize());
+map.getView().fit([1578093.767468, 4985266.495271, 1583731.749860, 4988960.032487], map.getSize());
 
 ////small screen definition
     var hasTouchScreen = map.getViewport().classList.contains('ol-touch');
@@ -112,7 +112,7 @@ var featureOverlay = new ol.layer.Vector({
     updateWhileInteracting: true // optional, for instant visual feedback
 });
 
-var doHighlight = false;
+var doHighlight = true;
 var doHover = true;
 
 function createPopupField(currentFeature, currentFeatureKeys, layer) {
@@ -840,6 +840,10 @@ function createMeasureTooltip() {
 }
 
 
+function convertToFeet(length) {
+    feet_length = length * 3.2808;
+    return feet_length
+}
 
 /**
  * format length output
@@ -856,15 +860,15 @@ var formatLength = function(line) {
       var c2 = ol.proj.transform(coordinates[i + 1], sourceProj, 'EPSG:4326');
       length += ol.sphere.getDistance(c1, c2);
     }
-  var output;
-  if (length > 100) {
-    output = (Math.round(length / 1000 * 100) / 100) +
-        ' ' + 'km';
-  } else {
-    output = (Math.round(length * 100) / 100) +
-        ' ' + 'm';
-  }
-  return output;
+    feet_length = convertToFeet(length)
+
+    var output;
+    if (feet_length > 5280) {
+        output = (Math.round(feet_length / 5280 * 100) / 100) + ' miles';
+    } else {
+        output = (Math.round(feet_length * 100) / 100) + ' ft';
+    }
+    return output;
 };
 
 /**
@@ -875,12 +879,11 @@ var formatLength = function(line) {
 var formatArea = function (polygon) {
   var area = polygon.getArea();
   var output;
-  if (area > 1000000) {
-	output =
-	  Math.round((area / 1000000) * 1000) / 1000 + " " + "km<sup>2</sup>";
-  } else {
-	output = Math.round(area * 100) / 100 + " " + "m<sup>2</sup>";
-  }
+  if (area > 107639) {  // Converte 1 km^2 in piedi quadrati
+    output = (Math.round((area / 107639) * 1000) / 1000) + ' sq mi';
+	} else {
+		output = (Math.round(area * 10.7639 * 100) / 100) + ' sq ft';
+	}
   return output;
 };
 
@@ -908,6 +911,17 @@ document.getElementsByClassName('gcd-gl-btn')[0].className += ' fa fa-search';
 
 //layer search
 
+var searchLayer = new SearchLayer({
+    layer: lyr_AP2025Aree_Permeabili_Comune_di_Napoli_1,
+    colName: 'NAME',
+    zoom: 10,
+    collapsed: true,
+    map: map
+});
+map.addControl(searchLayer);
+document.getElementsByClassName('search-layer')[0].getElementsByTagName('button')[0].className += ' fa fa-binoculars';
+document.getElementsByClassName('search-layer-input-search')[0].placeholder = 'Search feature ...';
+    
 
 //scalebar
 
