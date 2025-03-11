@@ -9,7 +9,7 @@ var map = new ol.Map({
 });
 
 //initial view - epsg:3857 coordinates if not "Match project CRS"
-map.getView().fit([1578579.573110, 4984775.672868, 1583552.722379, 4990026.543461], map.getSize());
+map.getView().fit([1585054.902749, 4992511.541483, 1587257.024916, 4993958.853788], map.getSize());
 
 ////small screen definition
     var hasTouchScreen = map.getViewport().classList.contains('ol-touch');
@@ -908,17 +908,6 @@ document.getElementsByClassName('gcd-gl-btn')[0].className += ' fa fa-search';
 
 //layer search
 
-var searchLayer = new SearchLayer({
-    layer: lyr_AP2025Aree_Permeabili_Comune_di_Napoli_1,
-    colName: 'NAME',
-    zoom: 10,
-    collapsed: true,
-    map: map
-});
-map.addControl(searchLayer);
-document.getElementsByClassName('search-layer')[0].getElementsByTagName('button')[0].className += ' fa fa-binoculars';
-document.getElementsByClassName('search-layer-input-search')[0].placeholder = 'Search feature ...';
-    
 
 //scalebar
 
