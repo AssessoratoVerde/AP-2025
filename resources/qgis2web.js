@@ -4,12 +4,12 @@ var map = new ol.Map({
     renderer: 'canvas',
     layers: layersList,
     view: new ol.View({
-         maxZoom: 28, minZoom: 2
+         maxZoom: 28, minZoom: 1
     })
 });
 
 //initial view - epsg:3857 coordinates if not "Match project CRS"
-map.getView().fit([1585054.902749, 4992511.541483, 1587257.024916, 4993958.853788], map.getSize());
+map.getView().fit([1576585.686633, 4989211.653281, 1587166.849362, 4995417.800694], map.getSize());
 
 ////small screen definition
     var hasTouchScreen = map.getViewport().classList.contains('ol-touch');
@@ -69,7 +69,8 @@ closer.onclick = function() {
     return false;
 };
 var overlayPopup = new ol.Overlay({
-    element: container
+    element: container,
+	autoPan: true
 });
 map.addOverlay(overlayPopup)
     
@@ -112,13 +113,13 @@ var featureOverlay = new ol.layer.Vector({
     updateWhileInteracting: true // optional, for instant visual feedback
 });
 
-var doHighlight = true;
-var doHover = true;
+var doHighlight = false;
+var doHover = false;
 
 function createPopupField(currentFeature, currentFeatureKeys, layer) {
     var popupText = '';
     for (var i = 0; i < currentFeatureKeys.length; i++) {
-        if (currentFeatureKeys[i] != 'geometry') {
+        if (currentFeatureKeys[i] != 'geometry' && currentFeatureKeys[i] != 'layerObject' && currentFeatureKeys[i] != 'idO') {
             var popupField = '';
             if (layer.get('fieldLabels')[currentFeatureKeys[i]] == "hidden field") {
                 continue;
@@ -276,9 +277,9 @@ function onPointerMove(evt) {
 
     if (doHover) {
         if (popupText) {
+			content.innerHTML = popupText;
+            container.style.display = 'block';
             overlayPopup.setPosition(coord);
-            content.innerHTML = popupText;
-            container.style.display = 'block';        
         } else {
             container.style.display = 'none';
             closer.blur();
@@ -294,9 +295,9 @@ var featuresPopupActive = false;
 
 function updatePopup() {
     if (popupContent) {
-        overlayPopup.setPosition(popupCoord);
         content.innerHTML = popupContent;
         container.style.display = 'block';
+		overlayPopup.setPosition(popupCoord);
     } else {
         container.style.display = 'none';
         closer.blur();
@@ -364,9 +365,9 @@ function onSingleClickWMS(evt) {
     if (doHover || sketch) {
         return;
     }
-	if (!featuresPopupActive) {
-		popupContent = '';
-	}
+    if (!featuresPopupActive) {
+        popupContent = '';
+    }
     var coord = evt.coordinate;
     var viewProjection = map.getView().getProjection();
     var viewResolution = map.getView().getResolution();
@@ -377,12 +378,12 @@ function onSingleClickWMS(evt) {
                 evt.coordinate, viewResolution, viewProjection, {
                     'INFO_FORMAT': 'text/html',
                 });
-            if (url) {				
-                const wmsTitle = wms_layers[i][0].get('popuplayertitle');					
+            if (url) {
+                const wmsTitle = wms_layers[i][0].get('popuplayertitle');
                 var ldsRoller = '<div id="lds-roller"><img class="lds-roller-img" style="height: 25px; width: 25px;"></img></div>';
-				
+
                 popupCoord = coord;
-				popupContent += ldsRoller;
+                popupContent += ldsRoller;
                 updatePopup();
 
                 var timeoutPromise = new Promise((resolve, reject) => {
@@ -391,30 +392,44 @@ function onSingleClickWMS(evt) {
                     }, 5000); // (5 second)
                 });
 
-                Promise.race([
-                    fetch('https://api.allorigins.win/raw?url=' + encodeURIComponent(url)),
-                    timeoutPromise
-                ])
-                .then((response) => {
-                    if (response.ok) {
-                        return response.text();
+                // Function to try fetch with different option
+                function tryFetch(urls) {
+                    if (urls.length === 0) {
+                        return Promise.reject(new Error('All fetch attempts failed'));
                     }
-                })
-                .then((html) => {
-                    if (html.indexOf('<table') !== -1) {
-                        popupContent += '<a><b>' + wmsTitle + '</b></a>';
-                        popupContent += html + '<p></p>';
-                        updatePopup();
-                    }
-                })
-                // .catch((error) => {
-				// })
-                .finally(() => {
-                    setTimeout(() => {
-                        var loaderIcon = document.querySelector('#lds-roller');
-						loaderIcon.remove();
-                    }, 500); // (0.5 second)	
-                });
+                    return fetch(urls[0])
+                        .then((response) => {
+                            if (response.ok) {
+                                return response.text();
+                            } else {
+                                throw new Error('Fetch failed');
+                            }
+                        })
+                        .catch(() => tryFetch(urls.slice(1))); // Try next URL
+                }
+
+                // List of URLs to try
+                // The first URL is the original, the second is the encoded version, and the third is the proxy
+                const urlsToTry = [
+                    url,
+                    encodeURIComponent(url),
+                    'https://api.allorigins.win/raw?url=' + encodeURIComponent(url)
+                ];
+
+                Promise.race([tryFetch(urlsToTry), timeoutPromise])
+                    .then((html) => {
+                        if (html.indexOf('<table') !== -1) {
+                            popupContent += '<a><b>' + wmsTitle + '</b></a>';
+                            popupContent += html + '<p></p>';
+                            updatePopup();
+                        }
+                    })
+                    .finally(() => {
+                        setTimeout(() => {
+                            var loaderIcon = document.querySelector('#lds-roller');
+                            if (loaderIcon) loaderIcon.remove();
+                        }, 500); // (0.5 second)
+                    });
             }
         }
     }
@@ -435,76 +450,6 @@ var bottomRightContainerDiv = document.getElementById('bottom-right-container')
 
 //geolocate
 
-isTracking = false;
-var geolocateControl = (function (Control) {
-    geolocateControl = function(opt_options) {
-        var options = opt_options || {};
-        var button = document.createElement('button');
-        button.className += ' fa fa-map-marker';
-        var handleGeolocate = function() {
-            if (isTracking) {
-                map.removeLayer(geolocateOverlay);
-                isTracking = false;
-          } else if (geolocation.getTracking()) {
-                map.addLayer(geolocateOverlay);
-                map.getView().setCenter(geolocation.getPosition());
-                isTracking = true;
-          }
-        };
-        button.addEventListener('click', handleGeolocate, false);
-        button.addEventListener('touchstart', handleGeolocate, false);
-        var element = document.createElement('div');
-        element.className = 'geolocate ol-unselectable ol-control';
-        element.appendChild(button);
-        ol.control.Control.call(this, {
-            element: element,
-            target: options.target
-        });
-    };
-    if (Control) geolocateControl.__proto__ = Control;
-    geolocateControl.prototype = Object.create(Control && Control.prototype);
-    geolocateControl.prototype.constructor = geolocateControl;
-    return geolocateControl;
-}(ol.control.Control));
-map.addControl(new geolocateControl())
-
-      var geolocation = new ol.Geolocation({
-  projection: map.getView().getProjection()
-});
-
-
-var accuracyFeature = new ol.Feature();
-geolocation.on('change:accuracyGeometry', function() {
-  accuracyFeature.setGeometry(geolocation.getAccuracyGeometry());
-});
-
-var positionFeature = new ol.Feature();
-positionFeature.setStyle(new ol.style.Style({
-  image: new ol.style.Circle({
-    radius: 6,
-    fill: new ol.style.Fill({
-      color: '#3399CC'
-    }),
-    stroke: new ol.style.Stroke({
-      color: '#fff',
-      width: 2
-    })
-  })
-}));
-
-geolocation.on('change:position', function() {
-  var coordinates = geolocation.getPosition();
-  positionFeature.setGeometry(coordinates ?
-      new ol.geom.Point(coordinates) : null);
-});
-
-var geolocateOverlay = new ol.layer.Vector({
-  source: new ol.source.Vector({
-    features: [accuracyFeature, positionFeature]
-  })
-});
-
-geolocation.setTracking(true);
 
 
 //measurement
@@ -895,19 +840,187 @@ if (elementToMove && parentElement) {
 
 //geocoder
 
-var geocoder = new Geocoder('nominatim', {
-  provider: 'osm',
-  lang: 'en-US',
-  placeholder: 'Search place or address ...',
-  limit: 5,
-  keepOpen: true,
-});
-map.addControl(geocoder);
-document.getElementsByClassName('gcd-gl-btn')[0].className += ' fa fa-search';
+  //Geocodeur
 
+  //Variable pouvant représenter le point de l'adresse géocodé
+  var vectorLayer = new ol.layer.Vector({ // VectorLayer({
+      source: new ol.source.Vector(),
+  });
+  map.addLayer(vectorLayer);
+  var vectorSource = vectorLayer.getSource();
+
+  //Variable servant à stocker les coordonnées des adresses géocodées
+  var obj2 = {
+  value: '',
+  letMeKnow() {
+      console.log(`Position géocodée ${this.gcd}`);
+  },
+  get gcd() {
+      return this.value;
+  },
+  set gcd(value) {
+      this.value = value;
+      this.letMeKnow();
+  }
+  }
+
+  var obj = {
+      value: '',
+      get label() {
+          return this.value;
+      },
+      set label(value) {
+          this.value = value;
+      }
+  }
+
+  //Fonction permettant de centrer, zoomer et représenter l'adresse géocodée
+  function onSelected(feature) {
+      obj.label = feature;
+      input.value = typeof obj.label.properties.label === "undefined"? obj.label.properties.display_name : obj.label.properties.label;
+      var coordinates = ol.proj.transform(
+      [feature.geometry.coordinates[0], feature.geometry.coordinates[1]],
+      "EPSG:4326",
+      map.getView().getProjection()
+      );
+      vectorSource.clear(true);
+      obj2.gcd = [feature.geometry.coordinates[0], feature.geometry.coordinates[1]];
+      var marker = new ol.Feature(new ol.geom.Point(coordinates));
+      var zIndex = 1;
+      marker.setStyle(new ol.style.Style({
+      image: new ol.style.Icon(({
+          anchor: [0.5, 36],
+          height:10,
+          width:10,
+          anchorXUnits: "fraction",
+          anchorYUnits: "pixels",
+          opacity: 1,
+          src: "./resources/ic_location_on_128_28437.png",
+          zIndex: zIndex
+      })),
+      zIndex: zIndex
+      }));
+      vectorSource.addFeature(marker);
+      map.getView().setCenter(coordinates);
+      map.getView().setZoom(18);
+  }
+
+  // Format result dans la barre de recherche autocompletée
+  var formatResult = function (feature, el) {
+      var title = document.createElement("strong");
+      el.appendChild(title);
+      var detailsContainer = document.createElement("small");
+      el.appendChild(detailsContainer);
+      var details = [];
+      title.innerHTML = feature.properties.label || feature.properties.display_name;
+      var types = {
+      housenumber: "numéro",
+      street: "rue",
+      locality: "lieu-dit",
+      municipality: "commune",
+      };
+      if (
+      feature.properties.city &&
+      feature.properties.city !== feature.properties.name
+      ) {
+      details.push(feature.properties.city);
+      }
+      if (feature.properties.context) {
+      details.push(feature.properties.context);
+      }
+      detailsContainer.innerHTML = details.join(", ");
+  };
+
+  //Définition d'une classe permettant la création du bouton de control de la barre de recherche dans une balise div
+  class AddDomControl extends ol.control.Control {
+      constructor(elementToAdd, opt_options) {
+      const options = opt_options || {};
+
+      const element = document.createElement("div");
+      if (options.className) {
+          element.className = options.className;
+      }
+      element.appendChild(elementToAdd);
+
+      super({
+          element: element,
+          target: options.target,
+      });
+      }
+  }
+
+  // Function to show you can do something with the returned elements
+  function myHandler(featureCollection) {
+      console.log(featureCollection);
+  }
+
+  // URL for API
+  const url = {"Nominatim": "https://nominatim.openstreetmap.org/search?format=geojson&addressdetails=1&",
+  "BAN": "https://api-adresse.data.gouv.fr/search/?"}
+  var API_URL = "//api-adresse.data.gouv.fr";
+
+  // Create search by adresses component
+  var containers = new Photon.Search({
+    resultsHandler: myHandler,
+    onSelected: onSelected,
+    placeholder: "Search an address",
+    formatResult: formatResult,
+    //url: API_URL + "/search/?",
+    url: url["Nominatim"],
+    position: "topright",
+    // ,includePosition: function() {
+    //   return ol.proj.transform(
+    //     map.getView().getCenter(),
+    //     map.getView().getProjection(), //'EPSG:3857',
+    //     'EPSG:4326'
+    //   );
+    // }
+  });
+
+  // Add the created DOM element within the map
+  var left = document.getElementById("top-left-container");
+  var controlGeocoder = new AddDomControl(containers, {
+    className: "photon-geocoder-autocomplete ol-unselectable ol-control",
+  });
+  map.addControl(controlGeocoder);
+  var search = document.getElementsByClassName("photon-geocoder-autocomplete ol-unselectable ol-control")[0];
+  search.style.display = "flex";
+
+  // Créer le nouvel élément bouton
+  var button = document.createElement("button");
+  button.type = "button";
+  button.id = "gcd-button-control";
+  button.className = "gcd-gl-btn fa fa-search leaflet-control";
+
+  // Ajouter le bouton à l'élément parent
+  search.insertBefore(button, search.firstChild);
+  last = search.lastChild;
+  last.style.display = "none";
+  button.addEventListener("click", function (e) {
+      if (last.style.display === "none") {
+          last.style.display = "block";
+      } else {
+          last.style.display = "none";
+      }
+  });
+  input = document.getElementsByClassName("photon-input")[0];
+  var searchbar = document.getElementsByClassName("photon-geocoder-autocomplete ol-unselectable ol-control")[0]
+  left.appendChild(searchbar);
+        
 
 //layer search
 
+var searchLayer = new SearchLayer({
+    layer: lyr_AP2025_aggiornamento5agosto_1,
+    colName: 'NAME',
+    zoom: 10,
+    collapsed: true,
+    map: map
+});
+map.addControl(searchLayer);
+document.getElementsByClassName('search-layer')[0].getElementsByTagName('button')[0].className += ' fa fa-binoculars';
+document.getElementsByClassName('search-layer-input-search')[0].placeholder = 'Search feature ...';
+    
 
 //scalebar
 
@@ -995,9 +1108,9 @@ document.addEventListener('DOMContentLoaded', function() {
         topLeftContainerDiv.appendChild(measureControl);
     }
     //geocoder
-    var geocoderControl = document.getElementsByClassName('ol-geocoder')[0];
-    if (geocoderControl) {
-        topLeftContainerDiv.appendChild(geocoderControl);
+    var searchbar = document.getElementsByClassName('photon-geocoder-autocomplete ol-unselectable ol-control')[0];
+    if (searchbar) {
+        topLeftContainerDiv.appendChild(searchbar);
     }
     //search layer
     var searchLayerControl = document.getElementsByClassName('search-layer')[0];
